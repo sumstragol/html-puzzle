@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+
+        <style>
+            #randomized-pieces { width: 300px; height: 600px; border: 1px solid black; position: relative; float: left; margin-right: 20px; }
+            #board, #conf { float: left; border: 1px solid black; margin-right: 20px; }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="randomized-pieces">
+                <div style="background-image: url('images/1.jpg'); width: 200px; height: 200px;">x</div>
+            </div>
+            <div id="board">
+                <div style="width: 200px; height: 200px; ">
+                    <div style="background-image: url('images/1.jpg'); width: 200px; height: 200px;">x</div>
+                </div>
+            </div>
+            <div id="conf" style="width: 300px; height: 600px; text-align: center;">
+                Difficulty: <br>
+                <button onclick="pieces_count = 4; init()">1</button>
+                <button onclick="pieces_count = 9; init()">2</button>
+                <button onclick="pieces_count = 16; init()">3</button>
+                <button onclick="pieces_count = 25; init()">4</button>
+                <button onclick="pieces_count = 36; init()">5</button>
+                <button onclick="pieces_count = 49; init()">6</button>
+                <button onclick="pieces_count = 64; init()">7</button><br>
+                Image: <br>
+                <button onclick="selected_image = 1; init()">1</button>
+                <button onclick="selected_image = 2; init()">2</button>
+                <button onclick="selected_image = 3; init()">3</button>
+                <button onclick="selected_image = 4; init()">4</button>
+                <button onclick="selected_image = 5; init()">5</button>
+                <button onclick="selected_image = 6; init()">6</button>
+                <button onclick="selected_image = 7; init()">7</button>
+                <button onclick="selected_image = 8; init()">8</button>
+                <button onclick="selected_image = 9; init()">9</button>
+                <button onclick="selected_image = 0; init()">10</button>
+
+                <div id="result"></div>
+            </div>
+        </div>
+        <script>
+            const STACK_WIDTH = 300;
+            const STACK_HEIGHT = 600; 
+            const BOARD_WIDTH = 600;
+
+            const IMAGES = [
+                "https://cdn.pixabay.com/photo/2015/04/19/08/32/marguerite-729510__480.jpg",
+                "https://cdn.pixabay.com/photo/2021/08/25/20/42/field-6574455__340.jpg",
+                "https://www.shaadidukaan.com/vogue/wp-content/uploads/2019/08/hug-kiss-images.jpg",
+                "https://helpx.adobe.com/content/dam/help/en/photoshop/using/matching-replacing-mixing-colors/jcr_content/main-pars/before_and_after/image-after/match-outcome3.png",
+                "https://assets-global.website-files.com/6005fac27a49a9cd477afb63/60576840e7d265198541a372_bavassano_homepage_gp.jpg",
+                "https://www.nature.com/immersive/d41586-021-00095-y/assets/3TP4N718ac/2021-01-xx_jan-iom_tree-of-life_sh-1080x1440.jpeg",
+                "http://webmeup.com/upload/blog/lead-image-105.png",
+                "https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg",
+                "https://media.springernature.com/relative-r300-703_m1050/springer-static/image/art%3A10.1038%2F528452a/MediaObjects/41586_2015_Article_BF528452a_Figg_HTML.jpg",
+                "https://www.w3schools.com/css/paris.jpg"
+            ];
+
+            var selected_image = 0;
+
+            var pieces_count = 4;
+
+            //-------------------------------------------------
+            //
+            // Get Current Size
+            // returns current width and height of pieces 
+            //
+            //-------------------------------------------------
+            function gcsize()
+            {
+                return BOARD_WIDTH / Math.sqrt(pieces_count);
+            }
+
+
+            //-------------------------------------------------
+            //
+            // Get Current Scale
+            // returns current scale of pieces
+            //
+            //-------------------------------------------------
+            function gcscale()
+            {
+                return (pieces_count / Math.sqrt(pieces_count)) * 100;
+            }
+
+
+            //-------------------------------------------------
+            //
+            // Get Current Step
+            // returns current step 
+            // (positioning background image of a single puzzle piece in x and y axis)
+            //
+            //-------------------------------------------------
+            function gcstep()
+            {
+                return 100 / (Math.sqrt(pieces_count) - 1);
+            }
+
+
+            //-------------------------------------------------
+            //
+            // Initalize
+            // set ups the pieces for the puzzle 
+            //
+            //-------------------------------------------------
+            function  init()
+            {
+                $("#result").empty();
+
+                let temp_size = gcsize();
+                let temp_scale = gcscale();
+                let temp_step = gcstep();
+
+                // stack
+                $("#randomized-pieces")
+                    .html("")
+                    // droppable so user can move around the pieces 
+                    // without inserting them at the acutall board
+                    .droppable({
+                        drop: function(event, ui)
+                        {
+                            ui.draggable.appendTo(this);
+                        }
+                    });
+
+                // giving a board new size so it will hold all pieces perfectly
+                $("#board").html("");
+                $("#board").css("width", BOARD_WIDTH + 2 * Math.sqrt(pieces_count));
+                $("#board").css("height", BOARD_WIDTH + 2 * Math.sqrt(pieces_count));
+
+                //i index of a single piece
+                let index = 0;
+
+                for (let i = 0; i < pieces_count / Math.sqrt(pieces_count); i++)
+                {
+                    for (let j = 0; j < pieces_count / Math.sqrt(pieces_count); j++)
+                    {
+                        // creating pieces
+                        //  randomzing placement of each piece 
+                        let temp_x = Math.floor(Math.random() * (STACK_WIDTH - gcsize()));
+                        let temp_y = Math.floor(Math.random() * (STACK_HEIGHT - gcsize()));
+
+                        $("#randomized-pieces").append(
+                            "<div class='piece' piece_nr='" + index + "'" +
+                                "style='" +
+                                "width: "  + temp_size + "px; " +
+                                "height: " + temp_size + "px; " + 
+                                "position: absolute; " +
+                                "left: " + temp_x + "px; " +
+                                "top: "  + temp_y + "px; " +
+                                "border: 1px solid black; " +
+                                'background-image: url("' + IMAGES[selected_image] + '"); ' +
+                                "background-size: " + temp_scale + "% " + temp_scale + "%; " +
+                                "background-position: " + (temp_step * j) + "% " + (temp_step * i) + "%;'>" +
+                            "</div>"
+                        );  
+                        
+                        // creating board
+                        $("#board").append(
+                            "<div class='piece-place' piece-place_nr='" + index + "'" +
+                                "style='" +
+                                "width: "  + temp_size + "px; " +
+                                "height: " + temp_size + "px; " + 
+                                "border: 1px solid black; " +
+                                "float: left;" +
+                            "'></div>"
+                        )
+                         
+                        index++;
+                    }   
+                }
+           
+                $(".piece").draggable({
+                    revert: "invalid"
+                });
+  
+                $(".piece-place").droppable({
+                    accept: function()
+                    {
+                        return ($(this).find("div").length == 0);
+                    },
+                    drop: function(event, ui)
+                    {
+                        // perfect aligment when dropped on free piece-place
+                        ui.draggable.css("top", "auto");
+                        ui.draggable.css("left", "auto");
+                        ui.draggable.appendTo(this);
+
+                        // triggers check if number of left pieces in randomized-pieces stack
+                        // is equal to 0 
+                        if ($("#randomized-pieces").find("div").length == 0)
+                        {
+                            check();
+                        }
+                    }
+                });
+            }
+        
+
+            //-------------------------------------------------
+            //
+            // check
+            // checks if all pieces are placed correctly
+            //
+            //-------------------------------------------------
+            function check()
+            {
+                let solved = true;
+                let i = 0;
+
+                $("#board .piece-place .piece").each(
+                    function()
+                    {
+                        if (!(i == ($(this).attr("piece_nr"))))
+                        {
+                            solved = false;
+                        }
+
+                        i++;
+                    }
+                );
+                
+                if (solved)
+                {
+                    $("#result").append(
+                        "<h1>Finished!</h1>" +
+                        "<button onclick='pieces_count=" + Math.pow((Math.sqrt(pieces_count) + 1), 2) + "; " +
+                        "init()'>" +
+                        "Increase the difficulty?</button>"
+                    );
+                }
+            }
+
+            init();
+        </script>
+    </body>
+</html>
